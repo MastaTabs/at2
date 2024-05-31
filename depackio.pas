@@ -1040,7 +1040,7 @@ begin
         jbe     @@1
         mov     ax,bx
         mov     result,ax
-  end;
+  end ['esi','edi','eax','ebx','ecx','edx'];
   InputCode := result;
 end;
 
@@ -1093,7 +1093,7 @@ begin
         call    UpdateModel
         pop     eax
         mov     result,ax
-  end;
+  end ['esi','edi','eax','ebx','ecx','edx'];
   Uncompress := result;
 end;
 
@@ -1543,7 +1543,7 @@ begin
         jmp     @@2
 @@25:   sub     edi,[dest]
         mov     result,edi
-  end;
+  end ['esi','edi','eax','ebx','ecx','edx'];
   APACK_decompress := result;
 end;
 {$ELSE}

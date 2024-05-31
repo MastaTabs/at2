@@ -1011,7 +1011,7 @@ begin
         add     edi,ebx
         loop    @@1
 @@2:
-  end;
+  end ['eax','ebx','ecx','edx','edi'];
 end;
 
 {$ELSE}
@@ -1776,7 +1776,7 @@ begin
         mov     eax,edi
         dec     eax
         mov     result,al
-  end;
+  end ['edi','ebx','eax'];
   _find_fx := result;
 end;
 

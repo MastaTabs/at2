@@ -133,7 +133,7 @@ begin
         mov     al,ah
         xlat
         stosb
-  end;
+  end ['eax','ecx','edi'];
 {$ELSE}
   byte2hex := data[value AND $0f0 SHR 4]+
               data[value AND $0f];
@@ -176,7 +176,7 @@ begin
         mov     al,ah
         xlat
         stosb
-  end;
+  end ['eax','ecx'];
 {$ELSE}
   If (value < 100) then
     byte2dec := data[value DIV 10]+
@@ -229,7 +229,7 @@ begin
         inc     edi
         loop    @@1
 @@4:
-  end;
+  end ['eax','ecx','esi','edi'];
 end;
 
 function Upper(str: String): String;
@@ -256,7 +256,7 @@ begin
         inc     edi
         loop    @@1
 @@3:
-  end;
+  end ['eax','ecx','esi','edi'];
 {$ELSE}
   Upper := UpCase(str);
 {$ENDIF}
@@ -286,7 +286,7 @@ begin
         inc     edi
         loop    @@1
 @@3:
-  end;
+  end ['eax','ecx','esi','edi'];
 {$ELSE}
   Lower := LowerCase(str);
 {$ENDIF}
@@ -327,7 +327,7 @@ begin
         inc     edi
         loop    @@3
 @@5:
-  end;
+  end ['eax','ecx','esi','edi'];
 end;
 {$ELSE}
 function iCase(str: String): String;
@@ -374,7 +374,7 @@ begin
         mov     cl,al
         rep     movsb
 @@2:
-  end;
+  end ['eax','ecx','esi','edi'];
 {$ELSE}
   While (Length(str) < size) do
     str := chr+str;
@@ -408,7 +408,7 @@ begin
         mov     cl,al
         rep     movsb
 @@2:
-  end;
+  end ['eax','ecx','esi','edi'];
 {$ELSE}
   While (Length(str) < size) do
     str := str+chr;
@@ -539,7 +539,7 @@ begin
         dec     edi
         loop    @@1
 @@2:
-  end;
+  end ['eax','ecx','esi','edi'];
 end;
 {$ELSE}
 function FlipStr(str: String): String;
@@ -578,7 +578,7 @@ begin
         inc     edi
         loop    @@1
 @@3:
-  end;
+  end ['eax','ecx','esi','edi'];
 end;
 {$ELSE}
 function FilterStr(str: String; chr0,chr1: Char): String;
@@ -619,7 +619,7 @@ begin
 @@4:    mov     eax,ebx
         mov     edi,@RESULT
         mov     [edi],al
-  end;
+  end ['eax','ecx','esi','edi'];
 end;
 {$ELSE}
 function FilterStr1(str: String; chr0: Char): String;
@@ -699,7 +699,7 @@ begin
         xor     al,al
         stosb
 @@4:
-  end;
+  end ['eax','ecx','esi','edi','ebx'];
 end;
 {$ELSE}
 function Num2str(num: Longint; base: Byte): String;
@@ -1165,7 +1165,7 @@ begin
         jmp     @@1
 @@15:   mov     result,FALSE
 @@16:
-  end;
+  end ['eax','ebx','ecx','edx','esi','edi'];
   SameName := result;
 end;
 

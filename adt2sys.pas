@@ -696,7 +696,7 @@ begin
         dec     loop_idx1
         cmp     loop_idx1,0
         ja      @@2
-  end;
+  end ['eax','ebx','ecx','esi','edi'];
 end;
 
 procedure draw_SDL_screen_960x800;
@@ -780,7 +780,7 @@ begin
         dec     loop_idx1
         cmp     loop_idx1,0
         ja      @@2
-  end;
+  end ['eax','ebx','ecx','edx','esi','edi'];
 end;
 
 procedure draw_SDL_screen_1440x960;
@@ -864,7 +864,7 @@ begin
         dec     loop_idx1
         cmp     loop_idx1,0
         ja      @@2
-  end;
+  end ['eax','ebx','ecx','edx','esi','edi'];
 end;
 
 {$ELSE}

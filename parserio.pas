@@ -106,7 +106,7 @@ begin
         inc     eax
 @@11:   dec     eax
         mov     result,eax
-  end;
+  end ['esi','edi','ebx','eax','ecx','edx'];
   Scan := result;
 end;
 
@@ -162,7 +162,7 @@ begin
         sub     eax,dword ptr [buf]
 @@6:    dec     eax
         mov     result,eax
-  end;
+  end ['esi','edi','ebx','eax','ecx','edx'];
   SensitiveScan := result;
 end;
 
@@ -205,7 +205,7 @@ begin
         jmp     @@6
 @@5:    mov     result,FALSE
 @@6:
-  end;
+  end ['esi','edi','ebx','eax','ecx','edx'];
   Compare := result;
 end;
 
@@ -246,7 +246,7 @@ begin
         jmp     @@6
 @@5:    mov     result,FALSE
 @@6:
-  end;
+  end ['esi','edi','ebx','eax','ecx','edx'];
   Empty := result;
 end;
 
@@ -274,7 +274,7 @@ begin
         jb      @@1
 @@3:    mov     eax,ebx
         mov     result,eax
-  end;
+  end ['esi','edi','ebx','eax','ecx','edx'];
   CountLines := result;
 end;
 
@@ -303,7 +303,7 @@ begin
         loop    @@1
 @@2:    mov     ax,bx
         mov     result,ax
-  end;
+  end ['esi','edi','ebx','eax','ecx'];
   Update16 := result;
 end;
 
@@ -332,7 +332,7 @@ begin
         loop    @@1
 @@2:    mov     eax,ebx
         mov     result,eax
-  end;
+  end ['esi','edi','ebx','eax','ecx'];
   Update32 := result;
 end;
 

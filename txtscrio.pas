@@ -350,7 +350,7 @@ begin
         cmp     index,cl
         jbe     @@1
 @@7:
-  end;
+  end ['eax','ebx','ecx','edi','esi'];
 end;
 
 procedure show_cstr(xpos,ypos: Byte; str: String; attr1,attr2: Byte);
@@ -482,7 +482,7 @@ begin
         cmp     index,cl
         jbe     @@1
 @@7:
-  end;
+  end ['eax','ebx','ecx','edi','esi'];
 end;
 
 procedure show_cstr_alt(xpos,ypos: Byte; str: String; attr1,attr2: Byte);
@@ -614,7 +614,7 @@ begin
         cmp     index,cl
         jbe     @@1
 @@7:
-  end;
+  end ['eax','ebx','ecx','edi','esi'];
 end;
 
 procedure show_vstr(xpos,ypos: Byte; str: String; color: Byte);
@@ -702,7 +702,7 @@ begin
         cmp     index,cl
         jbe     @@1
 @@7:
-  end;
+  end ['eax','ebx','ecx','edi','esi'];
 end;
 
 procedure show_vcstr(xpos,ypos: Byte; str: String; attr1,attr2: Byte);
@@ -834,7 +834,7 @@ begin
         cmp     index,cl
         jbe     @@1
 @@7:
-  end;
+  end ['eax','ebx','ecx','edi','esi'];
 end;
 
 var
@@ -884,7 +884,7 @@ begin
         stosw
         loop    @@1
 @@2:
-  end;
+  end ['eax','edx','ecx','edi','esi'];
 end;
 
 procedure ShowVStr(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; attr: Byte);
@@ -915,7 +915,7 @@ begin
         add     edi,ebx
         loop    @@1
 @@2:
-  end;
+  end ['eax','ebx','ecx','edx','edi','esi'];
 end;
 
 procedure ShowCStr(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2: Byte);
@@ -947,7 +947,7 @@ begin
 @@2:    xchg    ah,bh
         loop    @@1
 @@3:
-  end;
+  end ['eax','ebx','ecx','edx','edi','esi'];
 end;
 
 procedure ShowCStr2(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2: Byte);
@@ -979,7 +979,7 @@ begin
 @@2:    xchg    ah,bh
         loop    @@1
 @@3:
-  end;
+  end ['eax','ebx','ecx','edx','edi','esi'];
 end;
 
 procedure ShowVCStr(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2: Byte);
@@ -1019,7 +1019,7 @@ begin
 @@2:    xchg    ah,bh
         loop    @@1
 @@3:
-  end;
+  end ['eax','ebx','ecx','edx','edi','esi'];
 end;
 
 procedure ShowVCStr2(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2: Byte);
@@ -1059,7 +1059,7 @@ begin
 @@2:    xchg    ah,bh
         loop    @@1
 @@3:
-  end;
+  end ['eax','ebx','ecx','edx','edi','esi'];
 end;
 
 procedure ShowC3Str(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2,atr3: Byte);
@@ -1097,7 +1097,7 @@ begin
 @@3:    xchg    ah,bh
         loop    @@1
 @@4:
-  end;
+  end ['eax','ebx','ecx','edx','edi','esi'];
 end;
 
 procedure ShowC4Str(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2,atr3,atr4: Byte);
@@ -1141,7 +1141,7 @@ begin
 @@4:    xchg    ah,dl
         loop    @@1
 @@5:
-  end;
+  end ['eax','ebx','ecx','edx','edi','esi'];
 end;
 
 procedure ShowVC3Str(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2,atr3: Byte);
@@ -1187,7 +1187,7 @@ begin
 @@3:    xchg    ah,bh
         loop    @@1
 @@4:
-  end;
+  end ['eax','ebx','ecx','edx','edi','esi'];
 end;
 
 function CStrLen(str: String): Byte;
@@ -1212,7 +1212,7 @@ begin
 @@2:    loop    @@1
 @@3:    mov     eax,ebx
         mov     result,al
-  end;
+  end ['eax','ebx','ecx','esi'];
   CStrLen := result;
 end;
 
@@ -1238,7 +1238,7 @@ begin
 @@2:    loop    @@1
 @@3:    mov     eax,ebx
         mov     result,al
-  end;
+  end ['eax','ebx','ecx','esi'];
   CStr2Len := result;
 end;
 
@@ -1268,7 +1268,7 @@ begin
 @@3:    loop    @@1
 @@4:    mov     eax,ebx
         mov     result,al
-  end;
+  end ['eax','ebx','ecx','esi'];
   C3StrLen := result;
 end;
 
@@ -1298,7 +1298,7 @@ begin
         cld
         rep     movsb
 @@2:
-  end;
+  end ['eax','ecx','edx','edi','esi'];
 end;
 
 procedure Frame(dest: tSCREEN_MEM_PTR; x1,y1,x2,y2,atr1: Byte;
@@ -1502,7 +1502,7 @@ begin
         inc     edi
         loop    @@10
 @@11:
-  end;
+  end ['eax','ebx','ecx','edx','edi','esi'];
 end;
 
 {$IFDEF GO32V2}
@@ -2839,7 +2839,7 @@ begin
         mov     edi,dword ptr [screen_ptr]
         mov     ecx,SCREEN_MEM_SIZE
         rep     movsb
-    end;
+    end ['eax','ebx','ecx','edi','esi'];
 end;
 
 function is_default_screen_mode: Boolean;

@@ -482,7 +482,7 @@ begin
         shl     ax,10
         add     ax,FreqEnd
 @@2:    mov     result,ax
-  end;
+  end ['ebx','eax','ecx'];
   nFreq := result;
 end;
 
@@ -515,7 +515,7 @@ begin
         add     ax,dx
         add     ax,bx
         mov     result,ax
-  end;
+  end ['ecx','eax','ebx','edx'];
   calc_freq_shift_up := result;
 end;
 
@@ -548,7 +548,7 @@ begin
         add     ax,dx
         add     ax,bx
         mov     result,ax
-  end;
+  end ['ecx','eax','ebx','edx'];
   calc_freq_shift_down := result;
 end;
 
@@ -582,7 +582,7 @@ begin
         jne     @@1
         mov     dir,0
 @@1:    mov     result,ax
-  end;
+  end ['ebx','eax','ecx','edx'];
   tVIBRATO_TREMOLO_TABLE(table_data)[chan].dir := dir;
   calc_vibtrem_shift := result;
 end;
@@ -628,7 +628,7 @@ begin
         call    opl3out
         call    opl3out
 @@1:
-  end;
+  end ['ebx','eax','edx'];
 
   If is_4op_chan(chan) then
     begin
@@ -655,7 +655,7 @@ begin
         add     esi,ebx
         lodsb
         mov     result,al
-  end;
+  end ['ebx','esi','eax'];
   ins_parameter := result;
 end;
 
@@ -722,7 +722,7 @@ begin
         jmp     @@6
 @@5:    mov     result,FALSE
 @@6:
-  end;
+  end ['edx','eax','ecx','edi'];
   is_data_empty := result;
 end;
 
@@ -5473,7 +5473,7 @@ begin
         mov     ecx,CHUNK_SIZE
         rep     movsb
 @@2:
-  end;
+  end ['esi','edi','eax','ecx','ebx'];
 end;
 
 procedure put_chunk(pattern,line,channel: Byte; chunk: tCHUNK);
@@ -5516,7 +5516,7 @@ begin
         rep     movsb
         mov     module_archived,FALSE
 @@2:
-  end;
+  end ['esi','edi','eax','ecx','ebx'];
 end;
 
 function get_chanpos(var data; channels,scancode: Byte): Byte;
@@ -5551,7 +5551,7 @@ begin
         jmp     @@1
 @@4:    popa
 @@5:    mov     result,al
-  end;
+  end ['edi','eax','ecx','ebx'];
   get_chanpos := result;
 end;
 
@@ -5574,7 +5574,7 @@ begin
         jmp     @@2
 @@1:    xor     eax,eax
 @@2:    mov     result,al
-  end;
+  end ['edi','ecx','eax'];
   get_chanpos2 := result;
 end;
 
@@ -5600,7 +5600,7 @@ begin
 @@1:    add     al,chan_pos
         dec     al
 @@2:    mov     result,al
-  end;
+  end ['eax','ebx'];
   count_channel := result;
 end;
 
@@ -5626,7 +5626,7 @@ begin
         dec     bl
         mov     al,bl
 @@1:    mov     result,al
-  end;
+  end ['eax','ebx'];
   count_pos := result;
 end;
 
@@ -5936,7 +5936,7 @@ begin
         jmp     @@7
 @@6:    mov     result,FALSE
 @@7:
-  end;
+  end ['eax'];
   is_4op_chan := result;
 end;
 

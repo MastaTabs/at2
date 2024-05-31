@@ -1516,7 +1516,7 @@ begin
         sub     eax,esi
         dec     eax
         stosb
-  end;
+  end ['esi','edi','ebx','edx','eax'];
 end;
 
 {$ELSE}
