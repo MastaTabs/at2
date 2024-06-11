@@ -4,11 +4,11 @@ compiler.
 Since version 3.2 the compilers ABI for the i386 target has changed and certain
 registers aren't automatically saved onto the stack anymore when asm functions are
 called.
-The fix is to add a list to the asm parts end of clobbered registers so the compiler
+The fix is to add a list of clobbered registers to the asm parts end so the compiler
 knows to save them when such a function is called.
-This works for the Linux SDL i386 target. I have tested with the 3.2.2 and 3.3.1
-versions of the fpc compiler. I guess the DOS and Windows variants should still work.
-The source still compiles and works with a 2.6 version of fpc despite my changes.
+This works for the Linux SDL i386 target. I have tested with the 2.6, 3.2.2 and 3.3.1
+versions of the fpc compiler.
+My guess is, that the DOS and Windows variants should still work also.
 
 MastaTabs (June 2024)
 
