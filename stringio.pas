@@ -133,7 +133,7 @@ begin
         mov     al,ah
         xlat
         stosb
-  end ['eax','ecx','edi'];
+  end ['eax','ebx','ecx','edi'];
 {$ELSE}
   byte2hex := data[value AND $0f0 SHR 4]+
               data[value AND $0f];
@@ -176,7 +176,7 @@ begin
         mov     al,ah
         xlat
         stosb
-  end ['eax','ecx'];
+  end ['eax','ebx','ecx','edi'];
 {$ELSE}
   If (value < 100) then
     byte2dec := data[value DIV 10]+

@@ -350,7 +350,7 @@ begin
         cmp     index,cl
         jbe     @@1
 @@7:
-  end ['eax','ebx','ecx','edi','esi'];
+  end ['eax','ebx','ecx','edx','edi','esi'];
 end;
 
 procedure show_cstr(xpos,ypos: Byte; str: String; attr1,attr2: Byte);
@@ -482,7 +482,7 @@ begin
         cmp     index,cl
         jbe     @@1
 @@7:
-  end ['eax','ebx','ecx','edi','esi'];
+  end ['eax','ebx','ecx','edx','edi','esi'];
 end;
 
 procedure show_cstr_alt(xpos,ypos: Byte; str: String; attr1,attr2: Byte);
@@ -614,7 +614,7 @@ begin
         cmp     index,cl
         jbe     @@1
 @@7:
-  end ['eax','ebx','ecx','edi','esi'];
+  end ['eax','ebx','ecx','edx','edi','esi'];
 end;
 
 procedure show_vstr(xpos,ypos: Byte; str: String; color: Byte);
@@ -702,7 +702,7 @@ begin
         cmp     index,cl
         jbe     @@1
 @@7:
-  end ['eax','ebx','ecx','edi','esi'];
+  end ['eax','ebx','ecx','edx','edi','esi'];
 end;
 
 procedure show_vcstr(xpos,ypos: Byte; str: String; attr1,attr2: Byte);
@@ -834,7 +834,7 @@ begin
         cmp     index,cl
         jbe     @@1
 @@7:
-  end ['eax','ebx','ecx','edi','esi'];
+  end ['eax','ebx','ecx','edx','edi','esi'];
 end;
 
 var
@@ -884,7 +884,7 @@ begin
         stosw
         loop    @@1
 @@2:
-  end ['eax','edx','ecx','edi','esi'];
+  end ['eax','edx','ecx','edx','edi','esi'];
 end;
 
 procedure ShowVStr(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; attr: Byte);
