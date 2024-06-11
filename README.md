@@ -1,4 +1,17 @@
 ```
+In this version I have 'ported' the source to the 3.2+ versions of the i386 FreePascal
+compiler.
+Since version 3.2 the compilers ABI for the i386 target has changed and certain
+registers aren't automatically saved onto the stack anymore when asm functions are
+called.
+The fix is to add a list to the asm parts end of clobbered registers so the compiler
+knows to save them when such a function is called.
+This works for the Linux SDL i386 target. I have tested with the 3.2.2 and 3.3.1
+versions of the fpc compiler. I guess the DOS and Windows variants should still work.
+I'm not sure if the 2.6.x compiler versions still work with this source.
+
+MastaTabs (June 2024)
+
 +====================-                      -=+
 |                                             |
 |   /|DLiB TR/|CK3R ][ SDL Revision History   |
@@ -296,8 +309,8 @@ http://www.adlibtracker.net/files/revision.htm
    . updated incomplete key reference information in Help and .mht file
    . fixed waiting for key release when putting notes with MidiBoard
    . fixed non-blinking track flag and file overwrite bug 
-     in ‘per track’ recording mode
-   . reverted back to “FT” as default typing mode
+     in ï¿½per trackï¿½ recording mode
+   . reverted back to ï¿½FTï¿½ as default typing mode
 
 
 * SDL/Linux version 2.4.13
@@ -321,7 +334,7 @@ http://www.adlibtracker.net/files/revision.htm
 * SDL/Win32 version 2.4.12
   released: 03/11/2014
 
-   . added “per track” mode to WAV recorder (alter key: [Ctrl])  
+   . added ï¿½per trackï¿½ mode to WAV recorder (alter key: [Ctrl])  
    . added fully-featured macro browser
    . added bank browser for A2B and A2W files (finally :)   
    . added file-dependent positional memory to all bank browsers
@@ -350,7 +363,7 @@ http://www.adlibtracker.net/files/revision.htm
 
    . fixed cursor and decay bar speed to match DOS version parameters
    . fixed occasionally appearing interface bug in Pattern Editor window
-   . improved CPU saving feature (refer to option “sdl_frame_rate”)
+   . improved CPU saving feature (refer to option ï¿½sdl_frame_rateï¿½)
    . improved screen rendering routine (back to pure assembler roots :)
    . added Fade in/out feature for WAV recorder (alter key: [Shift])
    . added new modules from Diode Milliampere
@@ -376,7 +389,7 @@ http://www.adlibtracker.net/files/revision.htm
    . fixed drive list being not shown in File Selector window
    . removed DBOPL emulation core (no more necessary I think :)
    . added WAV recording feature (hotkey: [Alt] F11/F12);
-     check out config file and comments around option “sdl_wav_directory”
+     check out config file and comments around option ï¿½sdl_wav_directoryï¿½
      for more information about how to setup output files
 
 
@@ -396,11 +409,11 @@ http://www.adlibtracker.net/files/revision.htm
    . added instrument type indicators in Macro Editor window
    . added instrument type indicators and possibility to change current
      instrument in Instrument Editor window
-   . added some new modules (Madbrain’s awesome A2M collection is
+   . added some new modules (Madbrainï¿½s awesome A2M collection is
      hopefully complete now :) and a bit put to order some old ones
    . changed length of filename in File Selector to 23 chars
    . changed handling of F2/F3 related actions over instrument data
-   . added wide enhanced screen mode (option “sdl_screen_mode=2”);
+   . added wide enhanced screen mode (option ï¿½sdl_screen_mode=2ï¿½);
      extended screen content to 180/60 chars at 1440x960 pixels
    . fixed cursor position in Pattern Order with wide enhanced screen
 
@@ -428,7 +441,7 @@ http://www.adlibtracker.net/files/revision.htm
    . improved playback rewind with low song speed values
    . improved enhanced screen mode;
      extended screen content to 120/50 chars at screen resolution 960x800
-     (check yourself with setting “sdl_screen_mode=1” :)
+     (check yourself with setting ï¿½sdl_screen_mode=1ï¿½ :)
 
 
 * SDL/Win32 version 2.4.07
@@ -436,7 +449,7 @@ http://www.adlibtracker.net/files/revision.htm
 
    . fixed division by zero bug in playback fade out routine
    . added some modules from OxygenStar, a.o. to Modules directory
-   . added new “AT” command typing behavior mode (like FT but without
+   . added new ï¿½ATï¿½ command typing behavior mode (like FT but without
      cycling pattern moves) (hotkey: Shift+F11);
      if not overriden by config file, this mode is set by default
    . removed console window (here you go Mikkel :)
@@ -453,11 +466,11 @@ http://www.adlibtracker.net/files/revision.htm
    . fixed bug in replay routine (playback never advanced to order #7f)
    . fixed Status window update during playback calibration
    . fixed bug in treating KSL by MAME emulator (lucky at 4th attempt :);
-     rollback of all previous changes to KSL – this trivial bug caused
+     rollback of all previous changes to KSL ï¿½ this trivial bug caused
      all the annoying discrepancies in sound compared to DBOPL emulator
    . fixed some serious interface bugs in Macro Editor and Remap
      Instrument window, which raised during portation to Free Pascal
-     (btw, those ‘wtf’ table pointers had their meaning, Dmitry :)
+     (btw, those ï¿½wtfï¿½ table pointers had their meaning, Dmitry :)
    . added quick access key for Macro Editor window (^Q)
    . added macro-preview mode for Arpeggio/Vibrato Macro Editor window
    . added possibility to change current instrument directly within
@@ -481,10 +494,10 @@ http://www.adlibtracker.net/files/revision.htm
 * SDL/Win32 version 2.4.04
   released: 01/20/2014
 
-   . fixed drive listing in File Selector (no more ‘insert disk’ messages
+   . fixed drive listing in File Selector (no more ï¿½insert diskï¿½ messages
      without accesing drive :)
    . fixed calculation of KSL table in MAME OPL3 emulator (leads in those
-     arcade-like Benjamin Gerardin’s songs sound finally correct :)
+     arcade-like Benjamin Gerardinï¿½s songs sound finally correct :)
 
 
 * SDL/Win32 version 2.4.03
@@ -494,7 +507,7 @@ http://www.adlibtracker.net/files/revision.htm
      in Song Variables window
    . fixed binding of two 4OP instruments in Instrument Control panel
    . fixed toggle of ADSR preview (new key combo: Ctrl+LShift/RShift)
-   . improved program exit procedure (it’s more DOS-like again :)
+   . improved program exit procedure (itï¿½s more DOS-like again :)
    . MAME OPL3 emulator:
        - updated according latest modifications from MAME (0.148u1)
        - fixed bug with setting KSL on 4OP channels
@@ -502,7 +515,7 @@ http://www.adlibtracker.net/files/revision.htm
        - added DBOPL emulator from DOSBox 0.74
        - fixed stereo panning bug on percussion channels
    . added key combo for switching over OPL3 emulators ([Alt] F11/F12);
-     current OPL3 emulator is always indicated by flag “MME” resp. “DBE”
+     current OPL3 emulator is always indicated by flag ï¿½MMEï¿½ resp. ï¿½DBEï¿½
      in Status window
    . added options to config file:
        - set sampling rate (sdl_sample_rate)
