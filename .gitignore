@@ -3,4 +3,5 @@ release
 *.o
 *.ppu
 *.res
+*.ini
 adtrack2
