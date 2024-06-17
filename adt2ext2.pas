@@ -859,7 +859,7 @@ begin
 {$ELSE}
 
   sdl_screen_mode :=
-    check_number('sdl_screen_mode',10,0,2,sdl_screen_mode);
+    check_number('sdl_screen_mode',10,0,3,sdl_screen_mode);
 
   sdl_frame_rate :=
     check_number('sdl_frame_rate',10,50,200,sdl_frame_rate);
