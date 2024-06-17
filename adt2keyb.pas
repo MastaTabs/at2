@@ -306,7 +306,7 @@ procedure keyboard_reset_buffer_alt;
 begin
   _last_debug_str_ := _debug_str_;
   _debug_str_ := 'ADT2KEYB.PAS:keyboard_reset_buffer_alt';
-  If (MEMW[0:$041c]-MEMW[0:$041a] > 5) then
+  If (Word(MEMW[0:$041c])-Word(MEMW[0:$041a]) > 5) then
     MEMW[0:$041c] := MEMW[0:$041a];
 end;
 
