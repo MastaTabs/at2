@@ -8,7 +8,7 @@ The fix is to add a list of clobbered registers to the asm parts end so the comp
 knows to save them when such a function is called.
 This works for the Linux SDL i386 target. I have tested with the 2.6, 3.2.2 and 3.3.1
 versions of the fpc compiler.
-My guess is, that the DOS and Windows variants should still work also.
+DOS and Windows variants are tested too and are working.
 
 MastaTabs (June 2024)
 
