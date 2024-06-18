@@ -5748,6 +5748,7 @@ begin
 end;
 {$ENDIF}
 
+{$IFNDEF CPU64 OR NOASM}
 function get_chanpos(var data; channels,scancode: Byte): Byte;
 
 var
@@ -5783,7 +5784,59 @@ begin
   end ['edi','eax','ecx','ebx'];
   get_chanpos := result;
 end;
+{$ELSE}
+// function is_4op_chan(chan: Byte): Boolean;
+// begin
+//   // Placeholder function for is_4op_chan. Replace with actual implementation.
+//   is_4op_chan := False;
+// end;
 
+function get_chanpos(var data; channels, scancode: Byte): Byte;
+var
+  dataArray: array of Byte absolute data;
+  pos, result, index: Byte;
+  found: Boolean;
+begin
+  pos := 0;
+  found := False;
+  while pos < channels do
+  begin
+    // Check if the scancode is found in the current position
+    index := pos;
+    while (index < channels) and (dataArray[index] <> scancode) do
+      Inc(index);
+    
+    if index < channels then
+    begin
+      result := channels - (index - pos);
+      
+      // Call to is_4op_chan
+      if is_4op_chan(result) then
+      begin
+        Inc(pos);
+      end
+      else
+      begin
+        found := True;
+        Break;
+      end;
+    end
+    else
+    begin
+      result := 0;
+      found := True;
+      Break;
+    end;
+  end;
+  
+  if not found then
+    result := 0;
+
+  get_chanpos := result;
+end;
+{$ENDIF}
+
+{$IFNDEF CPU64 OR NOASM}
 function get_chanpos2(var data; channels,scancode: Byte): Byte;
 
 var
@@ -5806,7 +5859,36 @@ begin
   end ['edi','ecx','eax'];
   get_chanpos2 := result;
 end;
+{$ELSE}
+function get_chanpos2(var data; channels, scancode: Byte): Byte;
+var
+  dataArray: array of Byte absolute data;
+  pos: Byte;
+  found: Boolean;
+begin
+  pos := 0;
+  found := False;
+  
+  // Scan through the dataArray to find the scancode
+  while pos < channels do
+  begin
+    if dataArray[pos] = scancode then
+    begin
+      found := True;
+      Break;
+    end;
+    Inc(pos);
+  end;
 
+  // Calculate result based on whether the scancode was found
+  if found then
+    get_chanpos2 := channels - pos
+  else
+    get_chanpos2 := 0;
+end;
+{$ENDIF}
+
+{$IFNDEF CPU64 OR NOSASM}
 function count_channel(hpos: Byte): Byte;
 
 var
@@ -5832,7 +5914,30 @@ begin
   end ['eax','ebx'];
   count_channel := result;
 end;
+{$ELSE}
+function count_channel(hpos: Byte): Byte;
+var
+  quotient, remainder, result: Byte;
+begin
+  // Calculate the quotient and remainder of _pattedit_lastpos divided by MAX_TRACKS
+  quotient := _pattedit_lastpos div MAX_TRACKS;
+  remainder := _pattedit_lastpos mod MAX_TRACKS;
 
+  // Calculate the quotient and remainder of hpos divided by quotient
+  result := hpos div quotient;
+  remainder := hpos mod quotient;
+
+  // Adjust result based on whether there is a remainder
+  if remainder <> 0 then
+    result := result + chan_pos
+  else
+    result := result + chan_pos - 1;
+
+  count_channel := result
+end;
+{$ENDIF}
+
+{$IFNDEF CPU64 OR NOASM}
 function count_pos(hpos: Byte): Byte;
 
 var
@@ -5858,6 +5963,29 @@ begin
   end ['eax','ebx'];
   count_pos := result;
 end;
+{$ELSE}
+function count_pos(hpos: Byte): Byte;
+var
+  quotient, remainder: Byte;
+  temp: Byte;
+begin
+  // Calculate the quotient of _pattedit_lastpos divided by MAX_TRACKS
+  quotient := _pattedit_lastpos div MAX_TRACKS;
+
+  // Calculate the quotient and remainder of hpos divided by the previously obtained quotient
+  remainder := hpos mod quotient;
+  temp := remainder;
+  Dec(temp);
+
+  // If there is no remainder, adjust the result by decrementing the quotient and assigning it to result
+  if remainder = 0 then
+  begin
+    Dec(quotient);
+    count_pos := quotient;
+  end
+  else count_pos := temp;
+end;
+{$ENDIF}
 
 procedure count_order(var entries: Byte);
 
@@ -6106,6 +6234,7 @@ begin
   update_fmpar(chan);
 end;
 
+{$IFNDEF CPU64 OR NOASM}
 function is_4op_chan(chan: Byte): Boolean;
 
 var
@@ -6168,6 +6297,71 @@ begin
   end ['eax'];
   is_4op_chan := result;
 end;
+{$ELSE}
+function is_4op_chan(chan: Byte): Boolean;
+
+var
+  result: Boolean;
+
+begin
+  is_4op_chan := False;
+
+  // Check the different bits in flag_4op
+  if (songdata.flag_4op and $01) <> 0 then
+  begin
+    if (chan >= 1) and (chan <= 2) then
+    begin
+      is_4op_chan := True;
+      Exit;
+    end;
+  end;
+
+  if (songdata.flag_4op and $02) <> 0 then
+  begin
+    if (chan >= 3) and (chan <= 4) then
+    begin
+      is_4op_chan := True;
+      Exit;
+    end;
+  end;
+
+  if (songdata.flag_4op and $04) <> 0 then
+  begin
+    if (chan >= 5) and (chan <= 6) then
+    begin
+      is_4op_chan := True;
+      Exit;
+    end;
+  end;
+
+  if (songdata.flag_4op and $08) <> 0 then
+  begin
+    if (chan >= 10) and (chan <= 11) then
+    begin
+      is_4op_chan := True;
+      Exit;
+    end;
+  end;
+
+  if (songdata.flag_4op and $10) <> 0 then
+  begin
+    if (chan >= 12) and (chan <= 13) then
+    begin
+      is_4op_chan := True;
+      Exit;
+    end;
+  end;
+
+  if (songdata.flag_4op and $20) <> 0 then
+  begin
+    if (chan >= 14) and (chan <= 15) then
+    begin
+      is_4op_chan := True;
+      Exit;
+    end;
+  end;
+end;
+{$ENDIF}
 
 function is_in_block(x0,y0,x1,y1: Byte): Boolean;
 begin

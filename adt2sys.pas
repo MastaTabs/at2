@@ -597,7 +597,7 @@ end;
 
 {$ELSE}
 
-{$IFDEF CPU64}
+{$IFNDEF CPU64}
 
 procedure draw_SDL_screen_720x480;
 
@@ -934,7 +934,7 @@ begin
   _cursor_blink_factor := ROUND(13/100*sdl_frame_rate);
   _update_sdl_screen := TRUE;
 
-{$IFDEF CPU64}
+{$IFNDEF CPU64}
   Case program_screen_mode of
     0: draw_SDL_screen_720x480;
     1: draw_SDL_screen_960x800;
