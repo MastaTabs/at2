@@ -5,4 +5,7 @@ release
 *.ppu
 *.res
 *.ini
+*.a
+*.or
 adtrack2
+adtrack2.exe
