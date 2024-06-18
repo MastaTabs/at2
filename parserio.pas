@@ -35,6 +35,7 @@ var
   CRC16_table: array[BYTE] of Word;
   CRC32_table: array[BYTE] of Longint;
 
+{$IFNDEF NOASM}
 function Scan(var buf; skip,size: Longint; str: String): Longint;
 
 var
@@ -109,7 +110,65 @@ begin
   end ['esi','edi','ebx','eax','ecx','edx'];
   Scan := result;
 end;
+{$ELSE}
+function Scan(var buf; skip, size: Longint; str: String): Longint;
+var
+  result, i, j, len, bufLen: Longint;
+  searchStr, bufStr: String;
+  pBuf: PByte;
+begin
+  searchStr := '';
+  len := Length(str);
 
+  // Convert the search string to uppercase
+  for i := 1 to len do
+  begin
+    if (str[i] >= 'a') and (str[i] <= 'z') then
+      searchStr := searchStr + Chr(Ord(str[i]) - 32)
+    else
+      searchStr := searchStr + str[i];
+  end;
+
+  bufStr := '';
+  pBuf := PByte(@buf);
+
+  // Adjust pointer for skip
+  Inc(pBuf, skip);
+
+  bufLen := size - skip;
+
+  // Convert buffer to a comparable string
+  for i := 0 to bufLen - 1 do
+  begin
+    if (pBuf[i] >= Ord('a')) and (pBuf[i] <= Ord('z')) then
+      bufStr := bufStr + Chr(pBuf[i] - 32)
+    else
+      bufStr := bufStr + Chr(pBuf[i]);
+  end;
+
+  // Scan the buffer string for the search string
+  result := -1;
+  for i := 1 to Length(bufStr) - len + 1 do
+  begin
+    for j := 1 to len do
+    begin
+      if bufStr[i + j - 1] <> searchStr[j] then
+        Break;
+      if j = len then
+      begin
+        result := i + skip - 1;
+        Break;
+      end;
+    end;
+    if result <> -1 then
+      Break;
+  end;
+
+  Scan := result;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 function SensitiveScan(var buf; skip,size: Longint; str: String): Longint;
 
 var
@@ -165,7 +224,46 @@ begin
   end ['esi','edi','ebx','eax','ecx','edx'];
   SensitiveScan := result;
 end;
+{$ELSE}
+function SensitiveScan(var buf; skip, size: Longint; str: String): Longint;
+var
+  result, i, j, len, bufLen: Longint;
+  pBuf: PByte;
+  found: Boolean;
+begin
+  len := Length(str);
+  pBuf := PByte(@buf);
 
+  // Adjust pointer for skip
+  Inc(pBuf, skip);
+
+  bufLen := size - skip;
+
+  // Scan the buffer for the search string
+  result := -1;
+  for i := 0 to bufLen - len do
+  begin
+    found := True;
+    for j := 1 to len do
+    begin
+      if pBuf[i + j - 1] <> Ord(str[j]) then
+      begin
+        found := False;
+        Break;
+      end;
+    end;
+    if found then
+    begin
+      result := i + skip;
+      Break;
+    end;
+  end;
+
+  SensitiveScan := result;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 function Compare(var buf1,buf2; size: Longint): Boolean;
 
 var
@@ -208,7 +306,30 @@ begin
   end ['esi','edi','ebx','eax','ecx','edx'];
   Compare := result;
 end;
+{$ELSE}
+function Compare(var buf1, buf2; size: Longint): Boolean;
+var
+  p1, p2: PByte;
+  i: Longint;
+begin
+  p1 := PByte(@buf1);
+  p2 := PByte(@buf2);
 
+  // Loop through each byte and compare
+  for i := 0 to size - 1 do
+  begin
+    if p1[i] <> p2[i] then
+    begin
+      Compare := False;
+      Exit;
+    end;
+  end;
+
+  Compare := True;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 function Empty(var buf; size: Longint): Boolean;
 
 var
@@ -249,7 +370,29 @@ begin
   end ['esi','edi','ebx','eax','ecx','edx'];
   Empty := result;
 end;
+{$ELSE}
+function Empty(var buf; size: Longint): Boolean;
+var
+  p: PByte;
+  i: Longint;
+begin
+  p := PByte(@buf);
 
+  // Loop through each byte to check if all are zero
+  for i := 0 to size - 1 do
+  begin
+    if p[i] <> 0 then
+    begin
+      Empty := False;
+      Exit;
+    end;
+  end;
+
+  Empty := True;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 function CountLines(var buf; size: Longint): Longint;
 
 var
@@ -277,7 +420,37 @@ begin
   end ['esi','edi','ebx','eax','ecx','edx'];
   CountLines := result;
 end;
+{$ELSE}
+function CountLines(var buf; size: Longint): Longint;
+var
+  p: PByte;
+  i: Longint;
+  lineCount: Longint;
+begin
+  p := PByte(@buf);
+  lineCount := 0;
+  i := 0;
 
+  while i < size do
+  begin
+    // Look for carriage return (0x0D)
+    if p[i] = 13 then
+    begin
+      // Check for line feed (0x0A) immediately following
+      if (i + 1 < size) and (p[i + 1] = 10) then
+      begin
+        Inc(i); // Skip the line feed
+      end;
+      Inc(lineCount);
+    end;
+    Inc(i);
+  end;
+
+  CountLines := lineCount;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 function Update16(var buf; size: Longint; crc: Word): Word;
 
 var
@@ -285,6 +458,7 @@ var
 
 begin
   asm
+
         mov     esi,[buf]
         lea     edi,[CRC16_table]
         mov     bx,crc
@@ -306,7 +480,28 @@ begin
   end ['esi','edi','ebx','eax','ecx'];
   Update16 := result;
 end;
+{$ELSE}
+function Update16(var buf; size: Longint; crc: Word): Word;
+var
+  p: PByte;
+  i: Longint;
+  bx: Word;
+  index: Byte;
+begin
+  p := PByte(@buf);
+  bx := crc;
 
+  for i := 0 to size - 1 do
+  begin
+    index := (bx shr 8) xor p[i];
+    bx := (bx shl 8) xor CRC16_table[index];
+  end;
+
+  Update16 := bx;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 function Update32(var buf; size: Longint; crc: Longint): Longint;
 
 var
@@ -335,6 +530,26 @@ begin
   end ['esi','edi','ebx','eax','ecx'];
   Update32 := result;
 end;
+{$ELSE}
+function Update32(var buf; size: Longint; crc: Longint): Longint;
+var
+  p: PByte;
+  i: Longint;
+  bx: Longint;
+  index: Byte;
+begin
+  p := PByte(@buf);
+  bx := crc;
+
+  for i := 0 to size - 1 do
+  begin
+    index := (bx xor p[i]) and $FF;
+    bx := (bx shr 8) xor CRC32_table[index];
+  end;
+
+  Update32 := bx;
+end;
+{$ENDIF}
 
 procedure make_table_16bit;
 

@@ -449,6 +449,7 @@ const
   FreqEnd   = $2ae;
   FreqRange = FreqEnd-FreqStart;
 
+{$IFNDEF CPU64 OR NOASM}
 function nFreq(note: Byte): Word;
 
 const
@@ -485,7 +486,32 @@ begin
   end ['ebx','eax','ecx'];
   nFreq := result;
 end;
+{$ELSE}
+function nFreq(note: Byte): Word;
 
+const
+  Fnum: array[0..11] of Word = (
+    $157,$16b,$181,$198,$1b0,$1ca,$1e5,$202,$220,$241,$263,$287);
+
+var
+  result: Word;
+
+begin
+  result := 0;
+  if (note >= 12 * 8) then
+  begin
+    result := (FreqEnd and $FF00) or (FreqEnd and $00FF);
+  end
+  else
+  begin
+    result := (FreqEnd and $FF00) or ((FreqEnd + Fnum[note mod 12]) and $00FF);
+    result := (result shl 10) or ((result and $00FF) shl 8) or (result and $0000FF);
+  end;
+  nFreq := result;
+end;
+{$ENDIF}
+
+{$IFNDEF CPU64 OR NOASM}
 function calc_freq_shift_up(freq,shift: Word): Word;
 
 var
@@ -518,7 +544,27 @@ begin
   end ['ecx','eax','ebx','edx'];
   calc_freq_shift_up := result;
 end;
+{$ELSE}
+function calc_freq_shift_up(freq, shift: Word): Word;
 
+var
+  result: Word;
+
+begin
+  result := 0;
+  result := (freq and $FF00) or ((freq and $00FF) + shift);
+  if (result > FreqEnd) then
+  begin
+    result := FreqEnd;
+    if (freq and $0700) <> 0 then
+      result := result - FreqRange;
+  end;
+  result := (result and $F800) or ((result and $00700) shr 4) or (result and $0000FF);
+  calc_freq_shift_up := result;
+end;
+{$ENDIF}
+
+{$IFNDEF CPU64 OR NOASM}
 function calc_freq_shift_down(freq,shift: Word): Word;
 
 var
@@ -551,7 +597,27 @@ begin
   end ['ecx','eax','ebx','edx'];
   calc_freq_shift_down := result;
 end;
+{$ELSE}
+function calc_freq_shift_down(freq, shift: Word): Word;
 
+var
+  result: Word;
+
+begin
+  result := 0;
+  result := (freq and $FF00) or ((freq and $00FF) - shift);
+  if (result < FreqStart) then
+  begin
+    result := FreqStart;
+    if (freq and $0700) <> 0 then
+      result := result + FreqRange;
+  end;
+  result := (result and $F800) or ((result and $00700) shr 4) or (result and $0000FF);
+  calc_freq_shift_down := result;
+end;
+{$ENDIF}
+
+{$IFNDEF CPU64 OR NOASM}
 function calc_vibtrem_shift(chan: Byte; var table_data): Word;
 
 var
@@ -586,7 +652,31 @@ begin
   tVIBRATO_TREMOLO_TABLE(table_data)[chan].dir := dir;
   calc_vibtrem_shift := result;
 end;
+{$ELSE}
+function calc_vibtrem_shift(chan: Byte; var table_data): Word;
 
+var
+  pos, depth, dir: Byte;
+  result: Word;
+  i: Integer;
+
+begin
+  pos := tVIBRATO_TREMOLO_TABLE(table_data)[chan].pos;
+  depth := tVIBRATO_TREMOLO_TABLE(table_data)[chan].depth;
+
+  result := 0;
+  for i := 0 to depth do
+  begin
+    result := (result shl 1) or (pos and 1);
+    pos := (pos and (vibtrem_table_size - 1)) + 1;
+  end;
+  dir := Byte((pos and vibtrem_table_size) = 0);
+  tVIBRATO_TREMOLO_TABLE(table_data)[chan].dir := dir;
+  calc_vibtrem_shift := result;
+end;
+{$ENDIF}
+
+{$IFNDEF CPU64 OR NOASM}
 procedure change_freq(chan: Byte; freq: Word);
 begin
   If is_4op_chan(chan) and (chan in _4op_tracks_hi) then
@@ -636,7 +726,49 @@ begin
       freqtable2[PRED(chan)] := freqtable2[chan];
     end;
 end;
+{$ELSE}
+procedure change_freq(chan: Byte; freq: Word);
+var
+  temp_freq: Word;
+  index: Integer;
+begin
+  If is_4op_chan(chan) and (chan in _4op_tracks_hi) then
+    begin
+      freq_table[SUCC(chan)] := freq_table[chan];
+      freqtable2[SUCC(chan)] := freqtable2[chan];
+      chan := SUCC(chan);
+    end;
 
+
+// Calculate the index in the frequency table
+  index := (chan - 1) * 2;
+  
+  // Update the frequency table and frequency table 2
+  temp_freq := freq and $1FFF;
+  freq_table[index] := (freq_table[index] and not $1FFF) or temp_freq;
+  freqtable2[index] := (freqtable2[index] and not $1FFF) or temp_freq;
+
+  // Check if the channel flag is TRUE
+  if channel_flag[(chan - 1)] = TRUE then
+  begin
+    // Send frequency data to OPL3 chip for LSB and MSB
+    opl3out(_chan_n[index] + $A0, Lo(freq));
+    opl3out(_chan_n[index] + $B0, Hi(freq));
+  end;
+
+  // temp_freq := freq and $1FFF;
+  // freq_table[chan] := (freq_table[chan] and not $1FFF) + temp_freq;
+  // freqtable2[chan] := (freqtable2[chan] and not $1FFF) + temp_freq;
+
+  If is_4op_chan(chan) then
+    begin
+      freq_table[PRED(chan)] := freq_table[chan];
+      freqtable2[PRED(chan)] := freqtable2[chan];
+    end;
+end;
+{$ENDIF}
+
+{$IFNDEF CPU64 OR NOASM}
 function ins_parameter(ins,param: Byte): Byte;
 
 var
@@ -658,6 +790,29 @@ begin
   end ['ebx','esi','eax'];
   ins_parameter := result;
 end;
+{$ELSE}
+function ins_parameter(ins, param: Byte): Byte;
+var
+  result: Byte;
+  instrIndex: Integer;
+  instrDataPtr: PByte;
+begin
+  // Calculate the index of the desired field in the record
+  instrIndex := (ins - 1) * INSTRUMENT_SIZE + param;
+
+  // Get a pointer to the beginning of the record data
+  instrDataPtr := @songdata.instr_data;
+
+  // Move the pointer to the desired field
+  Inc(instrDataPtr, instrIndex);
+
+  // Dereference the pointer to get the value
+  result := instrDataPtr^;
+
+  // Return the result
+  ins_parameter := result;
+end;
+{$ENDIF}
 
 function is_chan_adsr_data_empty(chan: Byte): Boolean;
 begin
@@ -685,6 +840,7 @@ begin
     (ins_parameter(ins,6) AND $0f = 0);
 end;
 
+{$IFNDEF CPU64 OR NOASM}
 function is_data_empty(var buf; size: Longint): Boolean;
 
 var
@@ -725,6 +881,34 @@ begin
   end ['edx','eax','ecx','edi'];
   is_data_empty := result;
 end;
+{$ELSE}
+function is_data_empty(var buf; size: Longint): Boolean;
+var
+  i: Longint;
+  p: PByte;
+  result: Boolean;
+begin
+  p := @buf;
+  // Check in 4-byte chunks
+  for i := 1 to size div 4 do
+  begin
+    if (p^ <> 0) or (p[1] <> 0) or (p[2] <> 0) or (p[3] <> 0) then
+    begin
+      result := False;
+      Exit;
+    end;
+    Inc(p, 4);
+  end;
+  // Check remaining bytes
+  case size mod 4 of
+    1: if p^ <> 0 then result := False else result := True;
+    2: if (p^ <> 0) or (p[1] <> 0) then result := False else result := True;
+    3: if (p^ <> 0) or (p[1] <> 0) or (p[2] <> 0) then result := False else result := True;
+    0: result := True; // All bytes were zero
+  end;
+  is_data_empty := result;
+end;
+{$ENDIF}
 
 function min(value: Longint; minimum: Longint): Longint;
 begin
@@ -5432,6 +5616,7 @@ begin
         atr1,name,atr2,border);
 end;
 
+{$IFNDEF CPU64 OR NOASM}
 procedure get_chunk(pattern,line,channel: Byte; var chunk: tCHUNK);
 begin
   asm
@@ -5475,7 +5660,29 @@ begin
 @@2:
   end ['esi','edi','eax','ecx','ebx'];
 end;
+{$ELSE}
+procedure get_chunk(pattern, line, channel: Byte; var chunk: tCHUNK);
 
+var
+  pattdata_ptr: PByte;
+  offset: NativeUint;
+
+begin
+  pattdata_ptr := PByte(pattdata);
+  Inc(pattern);
+  if pattern > max_patterns then
+  begin
+    FillChar(chunk, SizeOf(tCHUNK), 0);
+    Exit;
+  end;
+
+  offset := NativeUint(line) * CHUNK_SIZE + NativeUint(channel) * 8 * 20 * CHUNK_SIZE;
+  pattdata_ptr := pattdata_ptr + NativeUint(pattern - 1) * 8 * 20 * CHUNK_SIZE + offset;
+  Move(pattdata_ptr^, chunk, SizeOf(tCHUNK));
+end;
+{$ENDIF}
+
+{$IFNDEF CPU64 OR NOASM}
 procedure put_chunk(pattern,line,channel: Byte; chunk: tCHUNK);
 begin
   asm
@@ -5518,6 +5725,28 @@ begin
 @@2:
   end ['esi','edi','eax','ecx','ebx'];
 end;
+{$ELSE}
+procedure put_chunk(pattern, line, channel: Byte; chunk: tCHUNK);
+
+var
+  pattdata_ptr: PByte;
+  offset: NativeUint;
+
+begin
+  pattdata_ptr := PByte(pattdata);
+  Inc(pattern);
+  if pattern > max_patterns then
+  begin
+    limit_exceeded := TRUE;
+    Exit;
+  end;
+
+  offset := NativeUint(line) * CHUNK_SIZE + NativeUint(channel) * 8 * 20 * CHUNK_SIZE;
+  pattdata_ptr := pattdata_ptr + NativeUint(pattern - 1) * 8 * 20 * CHUNK_SIZE + offset;
+  Move(chunk, pattdata_ptr^, SizeOf(tCHUNK));
+  module_archived := FALSE;
+end;
+{$ENDIF}
 
 function get_chanpos(var data; channels,scancode: Byte): Byte;
 

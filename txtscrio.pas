@@ -265,6 +265,7 @@ uses
   AdT2unit,AdT2sys,AdT2ext2,
   DialogIO,ParserIO;
 
+{$IFNDEF NOASM}
 procedure show_str(xpos,ypos: Byte; str: String; color: Byte);
 
 var
@@ -352,7 +353,57 @@ begin
 @@7:
   end ['eax','ebx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure show_str(xpos,ypos: Byte; str: String; color: Byte);
 
+var
+  s: ^Char; // input string
+  p: Pointer; // output screen address
+  a: Word; // prepared attribute
+  n: Byte; // number of input characters left to proceed
+  i: Byte; // index for a new character to show (1-based)
+  x12,x21,x22,y11,y21,x,y: Byte;
+  c: Char; // character to show
+
+begin
+  n := Length (str);
+  if (n <> 0) then begin
+    s := @str[1];
+
+    x12 := area_x1 + 2; // shadow: bottom line X1
+    x21 := area_x2 + 1; // shadow: vertical rectangle X1
+    x22 := area_x2 + 2; // shadow: bottom line and vertical rectangle X2
+    y11 := area_y1 + 1; // shadow: vertical rectangle Y1
+    y21 := area_y2 + 1; // shadow: bottom line Y and vertical rectangle Y2
+
+    i := 1;
+    a := color shl 8;
+    repeat
+      c := s^;
+      Inc (s);
+
+      p := Pointer(screen_ptr) + (((ypos-1)*MaxCol + xpos+i-2) shl 1);
+
+      x := xpos+i-1;
+      y := ypos;
+      if ((x >= x12) and (x <= x22) and (y = y21)
+      or  (x >= x21) and (x <= x22) and (y >= y11) and (y <= y21)) then begin
+        // in the shadow
+        Char(p^) := c;
+      end else
+      if ((x < area_x1) or (x > area_x2)
+      or  (y < area_y1) or (y > area_y2)) then begin
+        // outside the area
+        Word(p^) := Ord(c) + a;
+      end;
+
+      Inc (i);
+    until (i > n); // check string end
+  end;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 procedure show_cstr(xpos,ypos: Byte; str: String; attr1,attr2: Byte);
 
 var
@@ -484,7 +535,73 @@ begin
 @@7:
   end ['eax','ebx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure show_cstr(xpos,ypos: Byte; str: String; attr1,attr2: Byte);
 
+var
+  s: ^Char; // input string
+  p: Pointer; // output screen address
+  a1,a2,t: Word; // prepared attributes, `t' for swapping
+  n: Byte; // number of input characters left to proceed
+  i: Byte; // index for a new character to show (1-based)
+  x12,x21,x22,y11,y21,x,y: Byte;
+  c: Char; // character to show
+  flag: Byte; // 0=read, 1=stop, 2=show
+
+begin
+  n := Length (str);
+  if (n <> 0) then begin
+    s := @str[1];
+
+    x12 := area_x1 + 2; // shadow: bottom line X1
+    x21 := area_x2 + 1; // shadow: vertical rectangle X1
+    x22 := area_x2 + 2; // shadow: bottom line and vertical rectangle X2
+    y11 := area_y1 + 1; // shadow: vertical rectangle Y1
+    y21 := area_y2 + 1; // shadow: bottom line Y and vertical rectangle Y2
+
+    i := 1;
+    a1 := attr1 shl 8;
+    a2 := attr2 shl 8;
+    repeat
+      repeat
+        c := s^;
+        Inc (s);
+
+        if (c = '~') then begin // color switch mark
+          t := a2;
+          a2 := a1;
+          a1 := t;
+          Dec (n);
+          flag := Ord(i > n); // check string end
+        end else
+          flag := 2;
+
+      until (flag <> 0);
+
+      if (flag = 1) then break;
+
+      p := Pointer(screen_ptr) + (((ypos-1)*MaxCol + xpos+i-2) shl 1);
+
+      x := xpos+i-1;
+      y := ypos;
+      if ((x >= x12) and (x <= x22) and (y = y21)
+      or  (x >= x21) and (x <= x22) and (y >= y11) and (y <= y21)) then begin
+        // in the shadow
+        Char(p^) := c;
+      end else
+      if ((x < area_x1) or (x > area_x2)
+      or  (y < area_y1) or (y > area_y2)) then begin
+        // outside the area
+        Word(p^) := Ord(c) + a1;
+      end;
+
+      Inc (i);
+    until (i > n); // check string end
+  end;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 procedure show_cstr_alt(xpos,ypos: Byte; str: String; attr1,attr2: Byte);
 
 var
@@ -616,7 +733,73 @@ begin
 @@7:
   end ['eax','ebx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure show_cstr_alt(xpos,ypos: Byte; str: String; attr1,attr2: Byte);
 
+var
+  s: ^Char; // input string
+  p: Pointer; // output screen address
+  a1,a2,t: Word; // prepared attributes, `t' for swapping
+  n: Byte; // number of input characters left to proceed
+  i: Byte; // index for a new character to show (1-based)
+  x12,x21,x22,y11,y21,x,y: Byte;
+  c: Char; // character to show
+  flag: Byte; // 0=read, 1=stop, 2=show
+
+begin
+  n := Length (str);
+  if (n <> 0) then begin
+    s := @str[1];
+
+    x12 := area_x1 + 2; // shadow: bottom line X1
+    x21 := area_x2 + 1; // shadow: vertical rectangle X1
+    x22 := area_x2 + 2; // shadow: bottom line and vertical rectangle X2
+    y11 := area_y1 + 1; // shadow: vertical rectangle Y1
+    y21 := area_y2 + 1; // shadow: bottom line Y and vertical rectangle Y2
+
+    i := 1;
+    a1 := attr1 shl 8;
+    a2 := attr2 shl 8;
+    repeat
+      repeat
+        c := s^;
+        Inc (s);
+
+        if (c = #10) then begin // color switch mark
+          t := a2;
+          a2 := a1;
+          a1 := t;
+          Dec (n);
+          flag := Ord(i > n); // check string end
+        end else
+          flag := 2;
+
+      until (flag <> 0);
+
+      if (flag = 1) then break;
+
+      p := Pointer(screen_ptr) + (((ypos-1)*MaxCol + xpos+i-2) shl 1);
+
+      x := xpos+i-1;
+      y := ypos;
+      if ((x >= x12) and (x <= x22) and (y = y21)
+      or  (x >= x21) and (x <= x22) and (y >= y11) and (y <= y21)) then begin
+        // in the shadow
+        Char(p^) := c;
+      end else
+      if ((x < area_x1) or (x > area_x2)
+      or  (y < area_y1) or (y > area_y2)) then begin
+        // outside the area
+        Word(p^) := Ord(c) + a1;
+      end;
+
+      Inc (i);
+    until (i > n); // check string end
+  end;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 procedure show_vstr(xpos,ypos: Byte; str: String; color: Byte);
 
 var
@@ -704,7 +887,57 @@ begin
 @@7:
   end ['eax','ebx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure show_vstr(xpos,ypos: Byte; str: String; color: Byte);
 
+var
+  s: ^Char; // input string
+  p: Pointer; // output screen address
+  a: Word; // prepared attribute
+  n: Byte; // number of input characters left to proceed
+  i: Byte; // index for a new character to show (1-based)
+  x12,x21,x22,y11,y21,x,y: Byte;
+  c: Char; // character to show
+
+begin
+  n := Length (str);
+  if (n <> 0) then begin
+    s := @str[1];
+
+    x12 := area_x1 + 2; // shadow: bottom line X1
+    x21 := area_x2 + 1; // shadow: vertical rectangle X1
+    x22 := area_x2 + 2; // shadow: bottom line and vertical rectangle X2
+    y11 := area_y1 + 1; // shadow: vertical rectangle Y1
+    y21 := area_y2 + 1; // shadow: bottom line Y and vertical rectangle Y2
+
+    i := 1;
+    a := color shl 8;
+    repeat
+      c := s^;
+      Inc (s);
+
+      p := Pointer(screen_ptr) + (((ypos+i-2)*MaxCol + xpos-1) shl 1);
+
+      x := xpos;
+      y := ypos+i-1;
+      if ((x >= x12) and (x <= x22) and (y = y21)
+      or  (x >= x21) and (x <= x22) and (y >= y11) and (y <= y21)) then begin
+        // in the shadow
+        Char(p^) := c;
+      end else
+      if ((x < area_x1) or (x > area_x2)
+      or  (y < area_y1) or (y > area_y2)) then begin
+        // outside the area
+        Word(p^) := Ord(c) + a;
+      end;
+
+      Inc (i);
+    until (i > n); // check string end
+  end;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 procedure show_vcstr(xpos,ypos: Byte; str: String; attr1,attr2: Byte);
 
 var
@@ -836,10 +1069,76 @@ begin
 @@7:
   end ['eax','ebx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure show_vcstr(xpos,ypos: Byte; str: String; attr1,attr2: Byte);
+
+var
+  s: ^Char; // input string
+  p: Pointer; // output screen address
+  a1,a2,t: Word; // prepared attributes, `t' for swapping
+  n: Byte; // number of input characters left to proceed
+  i: Byte; // index for a new character to show (1-based)
+  x12,x21,x22,y11,y21,x,y: Byte;
+  c: Char; // character to show
+  flag: Byte; // 0=read, 1=stop, 2=show
+
+begin
+  n := Length (str);
+  if (n <> 0) then begin
+    s := @str[1];
+
+    x12 := area_x1 + 2; // shadow: bottom line X1
+    x21 := area_x2 + 1; // shadow: vertical rectangle X1
+    x22 := area_x2 + 2; // shadow: bottom line and vertical rectangle X2
+    y11 := area_y1 + 1; // shadow: vertical rectangle Y1
+    y21 := area_y2 + 1; // shadow: bottom line Y and vertical rectangle Y2
+
+    i := 1;
+    a1 := attr1 shl 8;
+    a2 := attr2 shl 8;
+    repeat
+      repeat
+        c := s^;
+        Inc (s);
+
+        if (c = '~') then begin // color switch mark
+          t := a2;
+          a2 := a1;
+          a1 := t;
+          Dec (n);
+          flag := Ord(i > n); // check string end
+        end else
+          flag := 2;
+
+      until (flag <> 0);
+
+      if (flag = 1) then break;
+
+      p := Pointer(screen_ptr) + (((ypos+i-2)*MaxCol + xpos-1) shl 1);
+
+      x := xpos;
+      y := ypos+i-1;
+      if ((x >= x12) and (x <= x22) and (y = y21)
+      or  (x >= x21) and (x <= x22) and (y >= y11) and (y <= y21)) then begin
+        // in the shadow
+        Char(p^) := c;
+      end else
+      if ((x < area_x1) or (x > area_x2)
+      or  (y < area_y1) or (y > area_y2)) then begin
+        // outside the area
+        Word(p^) := Ord(c) + a1;
+      end;
+
+      Inc (i);
+    until (i > n); // check string end
+  end;
+end;
+{$ENDIF}
 
 var
   absolute_pos: Word;
 
+{$IFNDEF NOASM}
 procedure DupChar; assembler;
 asm
         pushad                           {  IN/ al     -column        }
@@ -863,7 +1162,22 @@ asm
 @@1:    mov     absolute_pos,ax
         popad
 end;
+{$ELSE}
+procedure PosChar(x,y: Byte);
+begin
+  absolute_pos := ((y-1)*MaxCol + x-1) shl 1;
+end;
 
+procedure DupChar(x,y: Byte; c: Char; attr,count: Byte; dest: Pointer);
+begin
+  absolute_pos := ((y-1)*MaxCol + x-1) shl 1; // exactly the same as in `PosChar'
+
+  if (count <> 0) then
+    FillWord ((dest+absolute_pos)^, count, Ord(c) + (attr shl 8));
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 procedure ShowStr(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; attr: Byte);
 begin
   asm
@@ -886,7 +1200,34 @@ begin
 @@2:
   end ['eax','edx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure ShowStr(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; attr: Byte);
 
+var
+  s: ^Char; // input string
+  p: ^Word; // output screen address
+  a: Word; // prepared attribute
+  n: Byte; // number of input characters left to proceed
+
+begin
+  PosChar (x, y); // set `absolute_pos'
+
+  n := Length (str);
+  if (n <> 0) then begin
+    s := @str[1];
+    p := Pointer(dest) + absolute_pos; // cast to `Pointer' for correct address
+    a := attr shl 8;
+    repeat
+      p^ := Ord(s^) + a;
+      Inc (s);
+      Inc (p); // in 2-bytes units
+      Dec (n);
+    until (n = 0);
+  end;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 procedure ShowVStr(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; attr: Byte);
 begin
   asm
@@ -917,7 +1258,34 @@ begin
 @@2:
   end ['eax','ebx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure ShowVStr(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; attr: Byte);
 
+var
+  s: ^Char; // input string
+  p: ^Word; // output screen address
+  a: Word; // prepared attribute
+  n: Byte; // number of input characters left to proceed
+
+begin
+  PosChar (x, y); // set `absolute_pos'
+
+  n := Length (str);
+  if (n <> 0) then begin
+    s := @str[1];
+    p := Pointer(dest) + absolute_pos; // cast to `Pointer' for correct address
+    a := attr shl 8;
+    repeat
+      p^ := Ord(s^) + a;
+      Inc (s);
+      Inc (p, MaxCol); // in 2-bytes units
+      Dec (n);
+    until (n = 0);
+  end;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 procedure ShowCStr(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2: Byte);
 begin
   asm
@@ -949,7 +1317,53 @@ begin
 @@3:
   end ['eax','ebx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure ShowCStr(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2: Byte);
 
+var
+  s: ^Char; // input string
+  p: ^Word; // output screen address
+  a1,a2,t: Word; // prepared attributes, `t' for swapping
+  n: Byte; // number of input characters left to proceed
+  c: Char; // character to show
+  flag: Byte; // 0=read, 1=stop, 2=show
+
+begin
+  n := Length (str);
+  if (n <> 0) then begin
+    s := @str[1];
+    PosChar (x, y); // set `absolute_pos'
+    p := Pointer(dest) + absolute_pos; // cast to `Pointer' for correct address
+    a1 := atr1 shl 8;
+    a2 := atr2 shl 8;
+    repeat
+      repeat
+        c := s^;
+        Inc (s);
+
+        if (c = '~') then begin // color switch mark
+          t := a2;
+          a2 := a1;
+          a1 := t;
+          Dec (n);
+          flag := Ord(n = 0); // check string end
+        end else
+          flag := 2;
+
+      until (flag <> 0); // color switch mark
+
+      if (flag = 1) then break;
+
+      p^ := Ord(c) + a1;
+      Inc (p); // in 2-bytes units
+
+      Dec (n);
+    until (n = 0); // check string end
+  end;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 procedure ShowCStr2(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2: Byte);
 begin
   asm
@@ -981,7 +1395,53 @@ begin
 @@3:
   end ['eax','ebx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure ShowCStr2(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2: Byte);
 
+var
+  s: ^Char; // input string
+  p: ^Word; // output screen address
+  a1,a2,t: Word; // prepared attributes, `t' for swapping
+  n: Byte; // number of input characters left to proceed
+  c: Char; // character to show
+  flag: Byte; // 0=read, 1=stop, 2=show
+
+begin
+  n := Length (str);
+  if (n <> 0) then begin
+    s := @str[1];
+    PosChar (x, y); // set `absolute_pos'
+    p := Pointer(dest) + absolute_pos; // cast to `Pointer' for correct address
+    a1 := atr1 shl 8;
+    a2 := atr2 shl 8;
+    repeat
+      repeat
+        c := s^;
+        Inc (s);
+
+        if (c = '"') then begin // color switch mark
+          t := a2;
+          a2 := a1;
+          a1 := t;
+          Dec (n);
+          flag := Ord(n = 0); // check string end
+        end else
+          flag := 2;
+
+      until (flag <> 0);
+
+      if (flag = 1) then break;
+
+      p^ := Ord(c) + a1;
+      Inc (p); // in 2-bytes units
+
+      Dec (n);
+    until (n = 0); // check string end
+  end;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 procedure ShowVCStr(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2: Byte);
 begin
   asm
@@ -1021,7 +1481,53 @@ begin
 @@3:
   end ['eax','ebx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure ShowVCStr(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2: Byte);
 
+var
+  s: ^Char; // input string
+  p: ^Word; // output screen address
+  a1,a2,t: Word; // prepared attributes, `t' for swapping
+  n: Byte; // number of input characters left to proceed
+  c: Char; // character to show
+  flag: Byte; // 0=read, 1=stop, 2=show
+
+begin
+  n := Length (str);
+  if (n <> 0) then begin
+    s := @str[1];
+    PosChar (x, y); // set `absolute_pos'
+    p := Pointer(dest) + absolute_pos; // cast to `Pointer' for correct address
+    a1 := atr1 shl 8;
+    a2 := atr2 shl 8;
+    repeat
+      repeat
+        c := s^;
+        Inc (s);
+
+        if (c = '~') then begin // color switch mark
+          t := a2;
+          a2 := a1;
+          a1 := t;
+          Dec (n);
+          flag := Ord(n = 0); // check string end
+        end else
+          flag := 2;
+
+      until (flag <> 0);
+
+      if (flag = 1) then break;
+
+      p^ := Ord(c) + a1;
+      Inc (p, MaxCol); // in 2-bytes units
+
+      Dec (n);
+    until (n = 0); // check string end
+  end;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 procedure ShowVCStr2(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2: Byte);
 begin
   asm
@@ -1061,7 +1567,53 @@ begin
 @@3:
   end ['eax','ebx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure ShowVCStr2(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2: Byte);
 
+var
+  s: ^Char; // input string
+  p: ^Word; // output screen address
+  a1,a2,t: Word; // prepared attributes, `t' for swapping
+  n: Byte; // number of input characters left to proceed
+  c: Char; // character to show
+  flag: Byte; // 0=read, 1=stop, 2=show
+
+begin
+  n := Length (str);
+  if (n <> 0) then begin
+    s := @str[1];
+    PosChar (x, y); // set `absolute_pos'
+    p := Pointer(dest) + absolute_pos; // cast to `Pointer' for correct address
+    a1 := atr1 shl 8;
+    a2 := atr2 shl 8;
+    repeat
+      repeat
+        c := s^;
+        Inc (s);
+
+        if (c = '`') then begin // color switch mark
+          t := a2;
+          a2 := a1;
+          a1 := t;
+          Dec (n);
+          flag := Ord(n = 0); // check string end
+        end else
+          flag := 2;
+
+      until (flag <> 0);
+
+      if (flag = 1) then break;
+
+      p^ := Ord(c) + a1;
+      Inc (p, MaxCol); // in 2-bytes units
+
+      Dec (n);
+    until (n = 0); // check string end
+  end;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 procedure ShowC3Str(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2,atr3: Byte);
 begin
   asm
@@ -1099,7 +1651,61 @@ begin
 @@4:
   end ['eax','ebx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure ShowC3Str(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2,atr3: Byte);
 
+var
+  s: ^Char; // input string
+  p: ^Word; // output screen address
+  a1,a2,a3,t: Word; // prepared attributes, `t' for swapping
+  n: Byte; // number of input characters left to proceed
+  c: Char; // character to show
+  flag: Byte; // 0=read, 1=stop, 2=show
+
+begin
+  n := Length (str);
+  if (n <> 0) then begin
+    s := @str[1];
+    PosChar (x, y); // set `absolute_pos'
+    p := Pointer(dest) + absolute_pos; // cast to `Pointer' for correct address
+    a1 := atr1 shl 8;
+    a2 := atr2 shl 8;
+    a3 := atr3 shl 8;
+    repeat
+      repeat
+        c := s^;
+        Inc (s);
+
+        if (c = '~') then begin // color switch mark 1
+          t := a2;
+          a2 := a1;
+          a1 := t;
+          Dec (n);
+          flag := Ord(n = 0); // check string end
+        end else
+        if (c = '`') then begin // color switch mark 2
+          t := a3;
+          a3 := a1;
+          a1 := t;
+          Dec (n);
+          flag := Ord(n = 0); // check string end
+        end else
+          flag := 2;
+
+      until (flag <> 0);
+
+      if (flag = 1) then break;
+
+      p^ := Ord(c) + a1;
+      Inc (p); // in 2-bytes units
+
+      Dec (n);
+    until (n = 0); // check string end
+  end;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 procedure ShowC4Str(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2,atr3,atr4: Byte);
 begin
   asm
@@ -1143,7 +1749,69 @@ begin
 @@5:
   end ['eax','ebx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure ShowC4Str(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2,atr3,atr4: Byte);
 
+var
+  s: ^Char; // input string
+  p: ^Word; // output screen address
+  a1,a2,a3,a4,t: Word; // prepared attributes, `t' for swapping
+  n: Byte; // number of input characters left to proceed
+  c: Char; // character to show
+  flag: Byte; // 0=read, 1=stop, 2=show
+
+begin
+  n := Length (str);
+  if (n <> 0) then begin
+    s := @str[1];
+    PosChar (x, y); // set `absolute_pos'
+    p := Pointer(dest) + absolute_pos; // cast to `Pointer' for correct address
+    a1 := atr1 shl 8;
+    a2 := atr2 shl 8;
+    a3 := atr3 shl 8;
+    a4 := atr4 shl 8;
+    repeat
+      repeat
+        c := s^;
+        Inc (s);
+
+        if (c = '~') then begin // color switch mark 1
+          t := a2;
+          a2 := a1;
+          a1 := t;
+          Dec (n);
+          flag := Ord(n = 0); // check string end
+        end else
+        if (c = '`') then begin // color switch mark 2
+          t := a3;
+          a3 := a1;
+          a1 := t;
+          Dec (n);
+          flag := Ord(n = 0); // check string end
+        end else
+        if (c = '^') then begin // color switch mark 3
+          t := a4;
+          a4 := a1;
+          a1 := t;
+          Dec (n);
+          flag := Ord(n = 0); // check string end
+        end else
+          flag := 2;
+
+      until (flag <> 0);
+
+      if (flag = 1) then break;
+
+      p^ := Ord(c) + a1;
+      Inc (p); // in 2-bytes units
+
+      Dec (n);
+    until (n = 0); // check string end
+  end;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 procedure ShowVC3Str(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2,atr3: Byte);
 begin
   asm
@@ -1189,7 +1857,61 @@ begin
 @@4:
   end ['eax','ebx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure ShowVC3Str(dest: tSCREEN_MEM_PTR; x,y: Byte; str: String; atr1,atr2,atr3: Byte);
 
+var
+  s: ^Char; // input string
+  p: ^Word; // output screen address
+  a1,a2,a3,t: Word; // prepared attributes, `t' for swapping
+  n: Byte; // number of input characters left to proceed
+  c: Char; // character to show
+  flag: Byte; // 0=read, 1=stop, 2=show
+
+begin
+  n := Length (str);
+  if (n <> 0) then begin
+    s := @str[1];
+    PosChar (x, y); // set `absolute_pos'
+    p := Pointer(dest) + absolute_pos; // cast to `Pointer' for correct address
+    a1 := atr1 shl 8;
+    a2 := atr2 shl 8;
+    a3 := atr3 shl 8;
+    repeat
+      repeat
+        c := s^;
+        Inc (s);
+
+        if (c = '~') then begin // color switch mark 1
+          t := a2;
+          a2 := a1;
+          a1 := t;
+          Dec (n);
+          flag := Ord(n = 0); // check string end
+        end else
+        if (c = '`') then begin // color switch mark 2
+          t := a3;
+          a3 := a1;
+          a1 := t;
+          Dec (n);
+          flag := Ord(n = 0); // check string end
+        end else
+          flag := 2;
+
+      until (flag <> 0);
+
+      if (flag = 1) then break;
+
+      p^ := Ord(c) + a1;
+      Inc (p, MaxCol); // in 2-bytes units
+
+      Dec (n);
+    until (n = 0); // check string end
+  end;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 function CStrLen(str: String): Byte;
 
 var
@@ -1215,7 +1937,31 @@ begin
   end ['eax','ebx','ecx','esi'];
   CStrLen := result;
 end;
+{$ELSE}
+function CStrLen(str: String): Byte;
 
+var
+  s: ^Char; // input string
+  n: Byte; // number of input characters left to proceed
+  len: Byte; // actual number of printable characters
+
+begin
+  len := 0;
+
+  n := Length (str);
+  s := @str[1];
+  while (n <> 0) do begin
+    if (s^ <> '~') then // color switch mark
+      Inc (len);
+    Inc (s);
+    Dec (n);
+  end;
+
+  CStrLen := len;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 function CStr2Len(str: String): Byte;
 
 var
@@ -1241,7 +1987,31 @@ begin
   end ['eax','ebx','ecx','esi'];
   CStr2Len := result;
 end;
+{$ELSE}
+function CStr2Len(str: String): Byte;
 
+var
+  s: ^Char; // input string
+  n: Byte; // number of input characters left to proceed
+  len: Byte; // actual number of printable characters
+
+begin
+  len := 0;
+
+  n := Length (str);
+  s := @str[1];
+  while (n <> 0) do begin
+    if (s^ <> '`') then // color switch mark
+      Inc (len);
+    Inc (s);
+    Dec (n);
+  end;
+
+  CStr2Len := len;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 function C3StrLen(str: String): Byte;
 
 var
@@ -1271,7 +2041,31 @@ begin
   end ['eax','ebx','ecx','esi'];
   C3StrLen := result;
 end;
+{$ELSE}
+function C3StrLen(str: String): Byte;
 
+var
+  s: ^Char; // input string
+  n: Byte; // number of input characters left to proceed
+  len: Byte; // actual number of printable characters
+
+begin
+  len := 0;
+
+  n := Length (str);
+  s := @str[1];
+  while (n <> 0) do begin
+    if ((s^ <> '~') and (s^ <> '`')) then // color switch marks
+      Inc (len);
+    Inc (s);
+    Dec (n);
+  end;
+
+  C3StrLen := len;
+end;
+{$ENDIF}
+
+{$IFNDEF NOASM}
 procedure ScreenMemCopy(source,dest: tSCREEN_MEM_PTR);
 begin
   cursor_backup := GetCursor;
@@ -1300,7 +2094,15 @@ begin
 @@2:
   end ['eax','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure ScreenMemCopy(source,dest: tSCREEN_MEM_PTR);
+begin
+  cursor_backup := GetCursor;
+  Move (source^, dest^, SCREEN_MEM_SIZE);
+end;
+{$ENDIF}
 
+{$IFNDEF NOASM}
 procedure Frame(dest: tSCREEN_MEM_PTR; x1,y1,x2,y2,atr1: Byte;
                 title: String; atr2: Byte; border: String);
 var
@@ -1504,6 +2306,110 @@ begin
 @@11:
   end ['eax','ebx','ecx','edx','edi','esi'];
 end;
+{$ELSE}
+procedure Frame(dest: tSCREEN_MEM_PTR; x1,y1,x2,y2,atr1: Byte;
+                title: String; atr2: Byte; border: String);
+var
+  s: ^Char; // input string
+  p: Pointer; // output screen address
+  a: Word; // prepared attribute
+  xexp1,xexp2,xexp3,yexp1,yexp2: ShortInt;
+  x,y,n: Byte;
+  wide_range_type: Boolean;
+  shadow_enabled: Boolean;
+
+begin
+  wide_range_type := fr_setting.wide_range_type;
+  shadow_enabled := fr_setting.shadow_enabled;
+  if (fr_setting.update_area) then begin
+    area_x1 := x1;
+    area_y1 := y1;
+    area_x2 := x2;
+    area_y2 := y2;
+  end;
+
+  if (wide_range_type) then begin
+    xexp1 := 4;
+    xexp2 := -1;
+    xexp3 := 7;
+    yexp1 := 1;
+    yexp2 := 2;
+    DupChar (x1-3, y1-1, ' ', atr1, x2-x1+7, dest);
+    DupChar (x1-3, y2+1, ' ', atr1, x2-x1+7, dest);
+    y := y1;
+    repeat
+      DupChar (x1-3, y, ' ', atr1, 3, dest);
+      DupChar (x2+1, y, ' ', atr1, 3, dest);
+      Inc (y);
+    until (y > y2); // signed comparison (!?)
+  end else begin
+    xexp1 := 1;
+    xexp2 := 2;
+    xexp3 := 1;
+    yexp1 := 0;
+    yexp2 := 1;
+  end;
+
+  n := x2-x1-1;
+  DupChar (x1,   y1, border[1], atr1, 1, dest);
+  DupChar (x1+1, y1, border[2], atr1, n, dest);
+  DupChar (x2,   y1, border[3], atr1, 1, dest);
+
+  y := y1;
+  repeat
+    Inc (y);
+    DupChar (x1,   y, border[4], atr1, 1, dest);
+    DupChar (x1+1, y, ' ',       atr1, n, dest);
+    DupChar (x2,   y, border[5], atr1, 1, dest);
+  until (y >= y2); // signed comparison (!?)
+
+  DupChar (x1,   y2, border[6], atr1, 1, dest);
+  DupChar (x1+1, y2, border[7], atr1, n, dest);
+  DupChar (x2,   y2, border[8], atr1, 1, dest);
+
+  n := Length (title);
+  if (n <> 0) then begin
+    x := x2-x1-n;
+    x := Word(x+1) shr 1;
+    PosChar (x1+x, y1); // set `absolute_pos'
+    p := Pointer(dest) + absolute_pos;
+    s := @title[1];
+    a := atr2 shl 8;
+    repeat
+      Word(p^) := Ord(s^) + a;
+      Inc (s);
+      Inc (p, 2);
+      Dec (n);
+    until (n = 0);
+  end;
+
+  if (shadow_enabled) then begin
+    y := y1-yexp1;
+    repeat
+      Inc (y);
+      PosChar (x2+xexp1, y); // set `absolute_pos'
+      p := Pointer(dest) + absolute_pos;
+      Byte((p+1)^) := $07;
+      Byte((p+3)^) := $07;
+      Inc (p, 5);
+      if (MaxCol > 180) then begin
+        Byte((p+1)^) := $07;
+        Inc (p, 2);
+      end;
+    until (y > y2);
+
+    PosChar (x1+xexp2, y2+yexp2); // set `absolute_pos'
+    p := Pointer(dest) + absolute_pos + 1;
+    n := x2-x1+xexp3;
+    if (MaxLn >= 60) then Dec (n);
+    repeat
+      Byte(p^) := $07;
+      Inc (p, 2);
+      Dec (n);
+    until (n = 0);
+  end;
+end;
+{$ENDIF}
 
 {$IFDEF GO32V2}
 
@@ -2800,6 +3706,7 @@ begin
   SetCursor(cursor_backup);
 end;
 
+{$IFNDEF NOASM}
 procedure move2screen_alt;
 
 var
@@ -2841,6 +3748,31 @@ begin
         rep     movsb
     end ['eax','ebx','ecx','edi','esi'];
 end;
+{$ELSE}
+procedure move2screen_alt;
+
+var
+  a,b: Pointer;
+  x,y: Byte;
+
+begin
+  if (move_to_screen_data <> NIL) then begin
+    Move (screen_ptr^, temp_screen2, SCREEN_MEM_SIZE);
+
+    a := move_to_screen_data;
+    b := ptr_temp_screen2;
+
+    for y := move_to_screen_area[2] to move_to_screen_area[4] do begin
+      for x := move_to_screen_area[1] to move_to_screen_area[3] do begin
+        PosChar (x, y);
+        Word((b+absolute_pos)^) := Word((a+absolute_pos)^);
+      end;
+    end;
+
+    Move (temp_screen2, screen_ptr^, SCREEN_MEM_SIZE);
+  end;
+end;
+{$ENDIF}
 
 function is_default_screen_mode: Boolean;
 begin

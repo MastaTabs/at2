@@ -54,7 +54,7 @@ var
   ctrl_bits,ctrl_mask,
   command,count,offs: Word;
 
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
 procedure RDC_decode;
 begin
   asm
@@ -278,7 +278,7 @@ const
   N = 1 SHL N_BITS;
   F = (1 SHL F_BITS)+THRESHOLD;
 
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
 
 procedure GetChar; assembler;
 asm
@@ -485,7 +485,7 @@ var
 const
   le7a: array[0..4] of Word = ($1ff,$3ff,$7ff,$0fff,$1fff);
 
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
 
 procedure NextCode; assembler;
 asm
@@ -791,7 +791,7 @@ var
   dad,frq: array[0..TWICEMAX] of Word;
   ibitCount,ibitBuffer,obufCount: Word;
 
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
 
 var
   index: Word;
@@ -1427,7 +1427,7 @@ begin
   SIXPACK_decompress := output_size;
 end;
 
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
 function APACK_decompress(var source,dest): Dword;
 
 var

@@ -146,7 +146,7 @@ const
   data: array[0..9] of char = '0123456789';
 
 begin
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
   asm
         mov     edi,@RESULT
         lea     ebx,[data]
@@ -189,7 +189,11 @@ begin
 end;
 
 function Capitalize(str: String): String;
+var
+  i: Integer;
+  capitalizedStr: String;
 begin
+{$IFNDEF CPU64}
   asm
         lea     esi,[str]
         mov     edi,@RESULT
@@ -229,12 +233,25 @@ begin
         inc     edi
         loop    @@1
 @@4:
-  end ['eax','ecx','esi','edi'];
+  end ['eax','ebx','ecx','edi','esi'];
+{$ELSE}
+  capitalizedStr := str;
+  if Length(capitalizedStr) > 0 then begin
+    capitalizedStr[1] := UpCase(capitalizedStr[1]);
+    for i := 2 to Length(capitalizedStr) do begin
+      if (capitalizedStr[i - 1] = ' ') and (capitalizedStr[i] in ['a'..'z']) then
+        capitalizedStr[i] := UpCase(capitalizedStr[i])
+      else
+        capitalizedStr[i] := LowerCase(capitalizedStr[i]);
+    end;
+  end;
+  Capitalize := capitalizedStr;
+{$ENDIF}
 end;
 
 function Upper(str: String): String;
 begin
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
   asm
         lea     esi,[str]
         mov     edi,@RESULT
@@ -264,7 +281,7 @@ end;
 
 function Lower(str: String): String;
 begin
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
   asm
         lea     esi,[str]
         mov     edi,@RESULT
@@ -292,7 +309,7 @@ begin
 {$ENDIF}
 end;
 
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
 function iCase(str: String): String;
 begin
   asm
@@ -350,7 +367,7 @@ end;
 
 function ExpStrL(str: String; size: Byte; chr: Char): String;
 begin
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
   asm
         lea     esi,[str]
         mov     edi,@RESULT
@@ -384,7 +401,7 @@ end;
 
 function ExpStrR(str: String; size: Byte; chr: Char): String;
 begin
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
   asm
         lea     esi,[str]
         mov     edi,@RESULT
@@ -518,7 +535,7 @@ begin
   CutStrR := str;
 end;
 
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
 function FlipStr(str: String): String;
 begin
    asm
@@ -556,7 +573,7 @@ begin
 end;
 {$ENDIF}
 
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
 function FilterStr(str: String; chr0,chr1: Char): String;
 begin
   asm
@@ -594,7 +611,7 @@ begin
 end;
 {$ENDIF}
 
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
 function FilterStr1(str: String; chr0: Char): String;
 begin
   asm
@@ -656,7 +673,7 @@ begin
   FilterStr2 := str;
 end;
 
-{$IFNDEF CPU64}
+{$IFNDEF CPU64 OR NOASM}
 function Num2str(num: Longint; base: Byte): String;
 
 const
@@ -1040,6 +1057,7 @@ _end:
   InputStr := s;
 end;
 
+{$IFNDEF NOASM}
 function SameName(str1,str2: String): Boolean;
 
 var
@@ -1168,6 +1186,79 @@ begin
   end ['eax','ebx','ecx','edx','esi','edi'];
   SameName := result;
 end;
+{$ELSE}
+function SameName(str1, str2: string): Boolean;
+var
+  i, j, lastW: Integer;
+  match: Boolean;
+begin
+  // Initialize variables
+  i := 1;
+  j := 1;
+  lastW := 0;
+  match := True;
+
+  // Main loop for string comparison
+  while (i <= Length(str1)) and (j <= Length(str2)) do
+  begin
+    // Wildcard '*' handling
+    if str1[i] = '*' then
+    begin
+      lastW := i;
+      Inc(i);
+      Continue;
+    end;
+
+    // Wildcard '?' handling
+    if str1[i] = '?' then
+    begin
+      Inc(i);
+      Inc(j);
+      Continue;
+    end;
+
+    // Character range handling
+    if str1[i] = '[' then
+    begin
+      // Match characters within brackets
+      Inc(i);
+      match := False;
+      while (i <= Length(str1)) and (str1[i] <> ']') do
+      begin
+        if (str1[i] = str2[j]) then
+        begin
+          match := True;
+          Break;
+        end;
+        Inc(i);
+      end;
+      if not match then
+        Break;
+      Inc(i);
+      Inc(j);
+      Continue;
+    end;
+
+    // Regular character comparison
+    if str1[i] <> str2[j] then
+    begin
+      match := False;
+      Break;
+    end;
+
+    // Move to the next characters
+    Inc(i);
+    Inc(j);
+  end;
+
+  // Check for remaining characters or wildcards in str1
+  while (i <= Length(str1)) and (str1[i] = '*') do
+    Inc(i);
+
+  // Set the result based on the matching conditions
+  SameName := match and ((i > Length(str1)) or ((j > Length(str2)) and (lastW > 0)));
+end;
+{$ENDIF}
 
 var
   dir:  DirStr;
