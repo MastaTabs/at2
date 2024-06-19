@@ -11,9 +11,8 @@ unit SDL__rwops;
   interface
 
     uses SDL_types, stdio;
-  { C default packing is dword }
 
-{$PACKRECORDS 4}
+{$INCLUDE begin_code.inc}
 
  { Pointers to basic pascal types, inserted by h2pas conversion program.}
   Type

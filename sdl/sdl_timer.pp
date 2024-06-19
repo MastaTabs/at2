@@ -12,9 +12,7 @@ unit SDL_timer;
 
     uses SDL_types;
 
-  { C default packing is dword }
-
-{$PACKRECORDS 4}
+{$INCLUDE begin_code.inc}
 
   {
       SDL - Simple DirectMedia Layer

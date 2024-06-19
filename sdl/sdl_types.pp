@@ -10,9 +10,8 @@ unit SDL_types;
 
   interface
 
-  { C default packing is dword }
+{$INCLUDE begin_code.inc}
 
-{$PACKRECORDS 4}
   {
       SDL - Simple DirectMedia Layer
       Copyright (C) 1997, 1998, 1999, 2000, 2001  Sam Lantinga
@@ -54,10 +53,12 @@ unit SDL_types;
        Uint32 = cardinal;
        Sint32 = Longint;
 
+{$PUSH}
+{$PACKRECORDS 1}
        Uint64 = record
-          hi, lo: Uint32 ;
-       end ;
-
+          lo, hi: Uint32;
+       end;
+{$POP}
        SDL_Bool = LongBool ;
     { General keyboard/mouse state definitions  }
     const

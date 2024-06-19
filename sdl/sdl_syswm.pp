@@ -9,9 +9,7 @@ unit SDL_syswm;
 
   interface
 
-  { C default packing is dword }
-
-{$PACKRECORDS 4}
+{$INCLUDE begin_code.inc}
 
   {
       SDL - Simple DirectMedia Layer

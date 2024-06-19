@@ -11,9 +11,8 @@ unit SDL_audio;
   interface
 
     uses SDL_types,SDL__rwops;
-  { C default packing is dword }
-
-{$PACKRECORDS 4}
+ 
+ {$INCLUDE begin_code.inc}
 
  { Pointers to basic pascal types, inserted by h2pas conversion program.}
   Type
